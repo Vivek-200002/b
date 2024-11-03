@@ -1,44 +1,42 @@
-// Libraries
+// Load environment variables from .env file
 require('dotenv').config();
+
+// Import libraries
 const express = require('express');
 const cors = require('cors');
 const morgan = require('morgan');
-const bodyParser = require('body-parser');
 const cookieParser = require('cookie-parser');
-const port = process.env.PORT || 8000;
-var path = require('path');
+const path = require('path');
+const bodyParser = require('body-parser');
 
+// Initialize Express app
 const app = express();
+const port = process.env.PORT || 8000;
 
-// Database connection
+// Connect to the database
 require('./database/connection');
 
-// Product Model
+// Import models and routes
 const Product = require('./models/Product');
-
-// Routes
 const router = require('./routes/router');
 
-// Middleware
+// Middleware setup
 app.use(morgan('dev'));
 app.use(express.json());
-app.use(cookieParser(""));
-app.use(cors({credentials: true, origin: 'http://localhost:3000'}));
+app.use(cookieParser());
+app.use(bodyParser.json());
+
+// Configure CORS to allow requests from the frontend
+app.use(cors({
+  credentials: true,
+  origin: process.env.CLIENT_URL || 'http://localhost:3000', // Replace 'http://localhost:3000' with your Vercel frontend URL
+}));
+
+// Set up routes
 app.use('/api', router);
 
-// For deployment
-if (process.env.NODE_ENV === 'production') {
-  app.use(express.static('client/build'));
-  app.get("*", (req, res) => {
-    res.sendFile(path.resolve(__dirname,  "client/build", "index.html"));
-  });
-}
+// Start server
+app.listen(port, () => {
+  console.log(`Server started at port ${port}`);
+});
 
-// Server
-app.listen(port, function() {
-  console.log("Server started at port " + port);
-})
-
-// ===== To store data from productsData.js =====
-// const defaultData = require('./defaultData');
-// defaultData();
